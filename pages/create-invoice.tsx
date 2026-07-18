@@ -10,9 +10,39 @@ export default function CreateInvoicePage() {
   const [status, setStatus] = useState<'Pending' | 'Paid'>('Pending');
 
   const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    setStatus('Pending');
+  event.preventDefault();
+
+  const invoice = {
+    id: Date.now(),
+    customerName,
+    description,
+    amount,
+    status: "Pending",
+    wallet:
+      localStorage.getItem("arcinvoice-address") ||
+      "Wallet Not Connected",
+    createdAt: new Date().toISOString(),
   };
+
+  const existingInvoices = JSON.parse(
+    localStorage.getItem("arc-invoices") || "[]"
+  );
+
+  existingInvoices.push(invoice);
+
+  localStorage.setItem(
+    "arc-invoices",
+    JSON.stringify(existingInvoices)
+  );
+
+  alert("Invoice Created Successfully!");
+
+  setCustomerName("");
+  setDescription("");
+  setAmount("");
+
+  window.location.href = "/transactions";
+};
 
   const paymentValue = `arcinvoice:${customerName || 'customer'}:${amount || '0'}`;
 
