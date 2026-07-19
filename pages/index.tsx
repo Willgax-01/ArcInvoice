@@ -1,8 +1,58 @@
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Layout from '../components/Layout';
 import WalletButton from '../components/WalletButton';
 
+interface Invoice {
+  amount: number;
+  createdAt?: string;
+}
+
+const STORAGE_KEY = 'arc-invoices';
+
+const formatCurrency = (value: number) =>
+  `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
 export default function HomePage() {
+  const [latestInvoiceAmount, setLatestInvoiceAmount] = useState<string>('No invoices yet.');
+
+  useEffect(() => {
+    const loadLatestInvoice = () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      const savedInvoices = window.localStorage.getItem(STORAGE_KEY);
+
+      if (!savedInvoices) {
+        setLatestInvoiceAmount('No invoices yet.');
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(savedInvoices) as Invoice[];
+        const latestInvoice = parsed[0];
+
+        if (latestInvoice?.amount) {
+          setLatestInvoiceAmount(formatCurrency(latestInvoice.amount));
+        } else {
+          setLatestInvoiceAmount('No invoices yet.');
+        }
+      } catch {
+        setLatestInvoiceAmount('No invoices yet.');
+      }
+    };
+
+    loadLatestInvoice();
+
+    const handleInvoiceUpdate = () => loadLatestInvoice();
+    window.addEventListener('arc-invoices-updated', handleInvoiceUpdate);
+
+    return () => {
+      window.removeEventListener('arc-invoices-updated', handleInvoiceUpdate);
+    };
+  }, []);
+
   return (
     <Layout>
       <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
@@ -38,9 +88,8 @@ export default function HomePage() {
             <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-sm text-emerald-300">Connected</span>
           </div>
           <div className="mt-6 rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 p-5">
-            <p className="text-sm text-slate-400">Next payout</p>
-            <p className="mt-2 text-3xl font-semibold text-white">$3,200.00</p>
-            <p className="mt-3 text-sm text-slate-300">Mock Arc Testnet settlement is ready for review.</p>
+            <p className="text-sm text-slate-400">Latest invoice amount</p>
+            <p className="mt-2 text-3xl font-semibold text-white">{latestInvoiceAmount}</p>
           </div>
         </div>
       </section>

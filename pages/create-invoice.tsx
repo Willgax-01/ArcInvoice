@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
 import Layout from '../components/Layout';
 import { mockWalletAddress } from '../lib/mockData';
@@ -7,42 +7,51 @@ export default function CreateInvoicePage() {
   const [customerName, setCustomerName] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [status, setStatus] = useState<'Pending' | 'Paid'>('Pending');
+  const [status] = useState<'Pending' | 'Paid'>('Pending');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (!successMessage) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setSuccessMessage(''), 3000);
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
 
   const handleSubmit = (event: FormEvent) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  const invoice = {
-    id: Date.now(),
-    customerName,
-    description,
-    amount,
-    status: "Pending",
-    wallet:
-      localStorage.getItem("arcinvoice-address") ||
-      "Wallet Not Connected",
-    createdAt: new Date().toISOString(),
+    const invoice = {
+      id: Date.now(),
+      customerName,
+      description,
+      amount,
+      status: 'Pending',
+      wallet:
+        localStorage.getItem('arcinvoice-address') ||
+        'Wallet Not Connected',
+      createdAt: new Date().toISOString(),
+    };
+
+    const existingInvoices = JSON.parse(
+      localStorage.getItem('arc-invoices') || '[]'
+    );
+
+    existingInvoices.push(invoice);
+
+    localStorage.setItem(
+      'arc-invoices',
+      JSON.stringify(existingInvoices)
+    );
+
+    window.dispatchEvent(new Event('arc-invoices-updated'));
+
+    setCustomerName('');
+    setDescription('');
+    setAmount('');
+    setSuccessMessage('Invoice created successfully.');
   };
-
-  const existingInvoices = JSON.parse(
-    localStorage.getItem("arc-invoices") || "[]"
-  );
-
-  existingInvoices.push(invoice);
-
-  localStorage.setItem(
-    "arc-invoices",
-    JSON.stringify(existingInvoices)
-  );
-
-  alert("Invoice Created Successfully!");
-
-  setCustomerName("");
-  setDescription("");
-  setAmount("");
-
-  window.location.href = "/transactions";
-};
 
   const paymentValue = `arcinvoice:${customerName || 'customer'}:${amount || '0'}`;
 
@@ -56,19 +65,22 @@ export default function CreateInvoicePage() {
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="mb-2 block text-sm text-slate-300">Customer Name</label>
-              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 outline-none ring-0" placeholder="Nova Labs" />
+              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 outline-none ring-0" placeholder="" />
             </div>
             <div>
               <label className="mb-2 block text-sm text-slate-300">Service Description</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-24 w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 outline-none" placeholder="Product design sprint" />
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-24 w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 outline-none" placeholder="" />
             </div>
             <div>
               <label className="mb-2 block text-sm text-slate-300">Amount</label>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 outline-none" placeholder="3200" />
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 outline-none" placeholder="" />
             </div>
             <button type="submit" className="w-full rounded-full bg-cyan-500 px-4 py-3 font-medium text-slate-950 transition hover:bg-cyan-400">
               Create Invoice
             </button>
+            {successMessage ? (
+              <p className="text-sm text-emerald-400">{successMessage}</p>
+            ) : null}
           </form>
         </section>
 
