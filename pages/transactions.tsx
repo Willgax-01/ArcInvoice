@@ -23,6 +23,31 @@ export default function TransactionsPage() {
     }
   }, []);
 
+  const persistInvoices = (nextInvoices: Invoice[]) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    localStorage.setItem("arc-invoices", JSON.stringify(nextInvoices));
+    setInvoices([...nextInvoices].reverse());
+    window.dispatchEvent(new Event("arc-invoices-updated"));
+    window.location.reload();
+  };
+
+  const handleMarkPaid = (index: number) => {
+    const nextInvoices = invoices.map((invoice, invoiceIndex) =>
+      invoiceIndex === index ? { ...invoice, status: "Paid" } : invoice
+    );
+
+    persistInvoices(nextInvoices);
+  };
+
+  const handleDelete = (index: number) => {
+    const nextInvoices = invoices.filter((_, invoiceIndex) => invoiceIndex !== index);
+
+    persistInvoices(nextInvoices);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -44,7 +69,7 @@ export default function TransactionsPage() {
           <div className="space-y-4">
             {invoices.map((invoice, index) => (
               <div
-                key={index}
+                key={`${invoice.customerName}-${index}`}
                 className="rounded-3xl border border-white/10 bg-slate-900/70 p-6"
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -85,6 +110,24 @@ export default function TransactionsPage() {
                       Wallet: {invoice.wallet}
                     </span>
                   )}
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleMarkPaid(index)}
+                    className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500"
+                  >
+                    Mark Paid
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(index)}
+                    className="rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
