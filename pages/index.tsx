@@ -11,7 +11,7 @@ export default function HomePage() {
             Modern Arc Testnet invoicing
           </span>
           <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-            Send invoices that feel as premium as your work.
+            ArcInvoice Phase 2 Ready
           </h1>
           <p className="max-w-xl text-lg text-slate-300">
             ArcInvoice helps freelancers and teams issue invoices, share payment QR codes, and track settlement status in a refined fintech experience.
