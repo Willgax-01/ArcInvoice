@@ -1,7 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
 import Layout from '../components/Layout';
-import { mockWalletAddress } from '../lib/mockData';
 
 export default function CreateInvoicePage() {
   const [customerName, setCustomerName] = useState('');
@@ -9,6 +8,7 @@ export default function CreateInvoicePage() {
   const [amount, setAmount] = useState('');
   const [status] = useState<'Pending' | 'Paid'>('Pending');
   const [successMessage, setSuccessMessage] = useState('');
+  const [walletAddress, setWalletAddress] = useState<string>('Wallet not connected');
 
   useEffect(() => {
     if (!successMessage) {
@@ -18,6 +18,24 @@ export default function CreateInvoicePage() {
     const timer = window.setTimeout(() => setSuccessMessage(''), 3000);
     return () => window.clearTimeout(timer);
   }, [successMessage]);
+
+  useEffect(() => {
+    const loadWalletAddress = () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      const storedAddress = window.localStorage.getItem('arcinvoice-address');
+      setWalletAddress(storedAddress || 'Wallet not connected');
+    };
+
+    loadWalletAddress();
+    window.addEventListener('wallet-updated', loadWalletAddress);
+
+    return () => {
+      window.removeEventListener('wallet-updated', loadWalletAddress);
+    };
+  }, []);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -94,7 +112,7 @@ export default function CreateInvoicePage() {
             </div>
             <div className="mt-4 w-full rounded-2xl bg-slate-800/80 p-4 text-sm text-slate-300">
               <p className="font-medium text-white">Invoice status: {status}</p>
-              <p className="mt-2 break-all">Wallet: {mockWalletAddress}</p>
+              <p className="mt-2 break-all">Wallet: {walletAddress}</p>
               <p className="mt-2 break-all">Memo: {paymentValue}</p>
             </div>
           </div>

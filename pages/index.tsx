@@ -15,6 +15,7 @@ const formatCurrency = (value: number) =>
 
 export default function HomePage() {
   const [latestInvoiceAmount, setLatestInvoiceAmount] = useState<string>('No invoices yet.');
+  const [walletAddress, setWalletAddress] = useState<string>('Wallet not connected');
 
   useEffect(() => {
     const loadLatestInvoice = () => {
@@ -43,13 +44,26 @@ export default function HomePage() {
       }
     };
 
+    const loadWalletAddress = () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      const storedAddress = window.localStorage.getItem('arcinvoice-address');
+      setWalletAddress(storedAddress || 'Wallet not connected');
+    };
+
     loadLatestInvoice();
+    loadWalletAddress();
 
     const handleInvoiceUpdate = () => loadLatestInvoice();
+    const handleWalletUpdate = () => loadWalletAddress();
     window.addEventListener('arc-invoices-updated', handleInvoiceUpdate);
+    window.addEventListener('wallet-updated', handleWalletUpdate);
 
     return () => {
       window.removeEventListener('arc-invoices-updated', handleInvoiceUpdate);
+      window.removeEventListener('wallet-updated', handleWalletUpdate);
     };
   }, []);
 
@@ -83,9 +97,11 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Live wallet</p>
-              <p className="mt-1 font-medium text-white">0xA1b2C3d4E5f6...</p>
+              <p className="mt-1 font-medium text-white">{walletAddress}</p>
             </div>
-            <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-sm text-emerald-300">Connected</span>
+            <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-sm text-emerald-300">
+              {walletAddress === 'Wallet not connected' ? 'Not connected' : 'Connected'}
+            </span>
           </div>
           <div className="mt-6 rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 p-5">
             <p className="text-sm text-slate-400">Latest invoice amount</p>

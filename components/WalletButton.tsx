@@ -65,6 +65,7 @@ export default function WalletButton() {
         "arcinvoice-address",
         formattedAddress
       );
+      window.dispatchEvent(new Event("wallet-updated"));
 
       setError("");
     } catch (err) {
@@ -85,6 +86,7 @@ export default function WalletButton() {
     window.localStorage.removeItem(
       "arcinvoice-address"
     );
+    window.dispatchEvent(new Event("wallet-updated"));
   };
 
   return (
